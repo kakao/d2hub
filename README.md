@@ -50,8 +50,7 @@ rspec
 
 
 ## 전체 구조
-
-    ![d2hub](https://github.com/kakao/d2hub/raw/master/d2hub.png)
+![d2hub](https://github.com/kakao/d2hub/raw/master/d2hub.png)
 
 
 ## License
