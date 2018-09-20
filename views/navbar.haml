@@ -1,0 +1,28 @@
+%nav.navbar.navbar-inverse.navbar-static-top(role="navigation")
+  .container
+    .navbar-header
+      %button.navbar-toggle(type="button" data-toggle="collapse" data-target="#navbar-collapse-1")
+        %span.sr-only
+        %span.icon-bar
+        %span.icon-bar
+        %span.icon-bar
+      %a.navbar-brand(href="/") D2Hub
+    .collapse.navbar-collapse#navbar-collapse-1
+      - if login?
+        %ul.nav.navbar-nav
+          %li
+            %a(href="/users/#{user_id}") 내 페이지
+        %ul.nav.navbar-nav
+          %li
+            %a(href="/repos") 전체 저장소
+        %ul.nav.navbar-nav.navbar-right
+          %form.navbar-form.navbar-left(role="search" method="GET" action="/search/repos")
+            .form-group
+              .inner-addon.right-addon
+                %i.glyphicon.glyphicon-search
+                %input.form-control(type="text" placeholder="저장소 검색..." name="q")
+          %li
+            %a(href="/logout")
+              %img.img-circle(src="#{user_img_url(user_id, 20)}")
+              %strong= user_id
+              %span 로그아웃

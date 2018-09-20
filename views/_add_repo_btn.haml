@@ -1,0 +1,10 @@
+- if member_of_organization? @org_name
+  .dropdown
+    %button.btn.btn-primary.dropdown-toggle#addRepoBtn(type="button" data-toggle="dropdown" aria-expanded="true")
+      %span +
+      %span 저장소 추가
+      %span.caret
+    %ul.dropdown-menu(role="menu" aria-labelledby="addRepoBtn")
+      %li(role="presentation")
+        %a(role="menuitem" tabindex="-1" href="/repo/add?org_name=#{@org_name}") 저장소
+        %a(role="menuitem" tabindex="-1" href="/builds/github") 자동 빌드

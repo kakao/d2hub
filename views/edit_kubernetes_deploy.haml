@@ -1,0 +1,144 @@
+.row#kubernetesDeploys
+  .col-sm-12
+    .row
+      .col-sm-12
+        %h2
+          %span Kubernetes 자동 배포
+    %br
+    .row
+      .col-sm-12
+        .panel.panel-default
+          .panel-heading
+            %h4
+              %span 자동 빌드 상세
+              %small (빌드 상세중 하나를 선택하세요. 마우스로 클릭하면 됩니다.)
+          .panel-body
+            .table-responsive
+              %table.table.table-hover.clickable-table
+                %thead
+                  %tr
+                    %th.col-sm-2 Git 타입
+                    %th.col-sm-2 Git 브랜치명
+                    %th.col-sm-2 Dockerfile 위치
+                    %th.col-sm-2 Dockerfile 파일명
+                    %th.col-sm-2 Docker 태그명
+                    %th.col-sm-2 Build Arg
+                %tbody
+                  %tr.clickable-row(v-repeat="build_tag : build_tags" v-on="click: selectBuildTag(build_tag)")
+                    %td.vert-center
+                      %h5 {{build_tag.git_type}}
+                    %td.vert-center
+                      %h5
+                        %span {{build_tag.git_branch_name}}
+                        %span.text-info.small(v-if="build_tag.use_regex") (정규표현식)
+                    %td.vert-center
+                      %h5 {{build_tag.dockerfile_location}}
+                    %td.vert-center
+                      %h5 {{build_tag.dockerfile_name}}
+                    %td.vert-center
+                      %h5
+                        %span.text-muted.small(v-if="build_tag.use_regex") Git 브랜치명과 동일한 태그명
+                        %span(v-if="!build_tag.use_regex") {{build_tag.docker_tag_name}}
+    %br
+    .row
+      .col-sm-12(v-show="selectedBuildTag")
+        .panel.panel-info
+          .panel-heading
+            %h4
+              %span Kubernetes 배포 설정
+              %small.text-warning kubernetes.yaml의 docker.image는 자동 빌드된 이미지명으로 대체됩니다.
+          .panel-body
+            .row(v-show="deploys.length > 0")
+              .col-sm-12
+                .table-responsive
+                  %table.table
+                    %thead
+                      %tr
+                        %th.col-sm-2 Kubernetes 서버 URL
+                        %th.col-sm-2 Kubernetes 서버 인증 정보
+                        %th.col-sm-2 kubernetes YAML 파일 경로
+                        %th.col-sm-2 환경 변수 (env)
+                        %th.col-sm-1 수정하기
+                        %th.col-sm-1 삭제하기
+                    %tbody(v-repeat="deploy : deploys")
+                      %tr
+                        %td {{deploy.kubernetes_url}}
+                        %td {{deploy.kubernetes_kubeconfig}}
+                        %td {{deploy.kubernetes_yaml_path}}
+                        %td {{deploy.env_vars}}
+                        %td
+                          %button.btn.btn-warning(type="button" data-toggle="modal" data-target="#kubernetesDeployModal" v-on="click: setDeployObj(deploy)") 수정하기
+                        %td
+                          %button.btn.btn-danger(type="button" v-on="click: remove(deploy)") 삭제하기
+            %br
+            .row
+              .col-sm-12
+                %button.btn.btn-success.btn-lg(type="button" data-toggle="modal" data-target="#kubernetesDeployModal") 새로운 배포 설정 추가
+
+  .modal.fade#kubernetesDeployModal(tabindex="-1" role="dialog" aria-labelledby="newKubernetesModalLabel" )
+    .modal-dialog.modal-lg(role="document" )
+      .modal-content
+        .modal-header
+          %button.close(type="button" data-dismiss="modal" aria-label="Close" )
+            %span(aria-hidden="true" ) &times;
+          %h4.modal-title#newKubernetesModalLabel Kubernetes 자동 배포 설정
+        .modal-body
+          .panel.panel-default
+            .panel-heading
+              %strong 자동 빌드 상세
+              %small (Kubernetes 자동 배포가 적용될 자동 빌드 상세입니다.)
+            .panel-body
+              .table-responsive
+                %table.table
+                  %thead
+                    %tr
+                      %th.col-sm-2 Git 타입
+                      %th.col-sm-2 Git 브랜치명
+                      %th.col-sm-2 Dockerfile 위치
+                      %th.col-sm-2 Dockerfile 파일명
+                      %th.col-sm-2 Docker 태그명
+                      %th.col-sm-2 Build Arg
+                  %tbody
+                    %tr
+                      %td.vert-center {{selectedBuildTag.git_type}}
+                      %td.vert-center
+                        %span {{selectedBuildTag.git_branch_name}}
+                        %span.text-info.small(v-if="selectedBuildTag.use_regex") (정규표현식)
+                      %td.vert-center {{selectedBuildTag.dockerfile_location}}
+                      %td.vert-center {{selectedBuildTag.dockerfile_name}}
+                      %td.vert-center
+                        %span.text-muted.small(v-if="selectedBuildTag.use_regex") Git 브랜치명과 동일한 태그명
+                        %span(v-if="!selectedBuildTag.use_regex") {{selectedBuildTag.docker_tag_name}}
+                      %td.vert-center {{selectedBuildTag.dockerbuild_arg}}
+          .panel.panel-success
+            .panel-heading
+              %strong Kubernetes 자동 배포 설정
+              %small (빌드가 완료되면 자동으로 Kubernetes으로 배포가 됩니다.)
+            .panel-body
+              %form
+                .form-group
+                  %label(for="deployKubernetesURL")
+                    %span Kubernetes 서버 URL
+                    %span.text-danger (필수)
+                  %input.form-control#deployKubernetesURL(type="text" v-model="deployObj.kubernetes_url" placeholder="http://kubernetes.example.com" )
+                .form-group
+                  %label(for="deployKubernetesKubeConfig")
+                    %span Kubernetes 서버 인증 정보
+                    %em.text-danger (필수)
+                  %textarea.form-control#deployKubernetesKubeConfig(v-model="deployObj.kubernetes_kubeconfig" placeholder="apiVersion: v1 ..." rows="3")
+                .form-group
+                  %label(for="deployEnvVars")
+                    %span 애플리케이션 환경변수
+                    %em.text-muted (옵션)
+                    %span (envs 속성에 추가됩니다.)
+                  %textarea.form-control#deployEnvVars(v-model="deployObj.env_vars" placeholder="key=value" rows="3")
+                .form-group
+                  %label(for="deployKubernetesYAMLPath")
+                    %span Kubernetes YAML 파일
+                    %span.text-danger (필수)
+                    %span (github 저장소에 있는 yaml 파일입니다.)
+                  %input.form-control#deployKubernetesYAMLPath(type="text" v-model="deployObj.kubernetes_yaml_path" placeholder="kubernetes.yaml" )
+        .modal-footer
+          %button.btn.btn-success(v-show="!deployObj.build_tag_id" type="button" v-on="click: add" disabled="{{!isValidDeployObj()}}") 배포 설정 추가
+          %button.btn.btn-warning(v-show="deployObj.build_tag_id" type="button" v-on="click: update" disabled="{{!isValidDeployObj()}}") 배포 설정 수정
+          %button.btn.btn-default(type="button" data-dismiss="modal") 취소

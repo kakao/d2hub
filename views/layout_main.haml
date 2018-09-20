@@ -1,0 +1,44 @@
+.row
+  .col-sm-3
+    .list-group
+      %ul.list-group-item.nav.nav-pills.nav-stacked
+        - if member_of_organization? @org_name
+          %li.dropdown
+            %a.dropdown-toggle(data-toggle="dropdown" href="#")
+              %h4
+                %img.img-circle(src="#{user_img_url(@org_name, 25)}")
+                %span= @org_name
+                %span.pull-right.glyphicon.glyphicon-chevron-down
+            %ul.dropdown-menu(role="menu" aria-labelledby="dLabel")
+              - @orgs.each do |org|
+                - if org[:name] != @org_name
+                  %li
+                    %a(href="/orgs/#{org[:name]}/repos")
+                      %h4
+                        %img.img-circle(src="#{user_img_url(org[:name], 25)}")
+                        %span= org[:name]
+              - if member_of_organization? @org_name
+                %li
+                  %a(href="/organization/add")
+                    %h4
+                      %span +
+                      %span 조직 추가
+        - else
+          %li
+            %a(href="/users/#{@user[:name]}")
+              %h4
+                %img.img-circle(src="#{user_img_url(@org_name, 25)}")
+                %span= @org_name
+      - if primary_organization? @org_name
+        %a.list-group-item#item_summary(href="/users/#{@user[:name]}") 요약
+      %a.list-group-item#item_repos(href="/orgs/#{@org_name}/repos") 저장소
+      - if primary_organization? @org_name
+        %a.list-group-item#item_starred(href="/users/#{@user[:name]}/starred") 북마크
+    - if member_of_organization? @org_name
+      %ul.list-group
+      - if primary_organization? @org_name
+        %a.list-group-item(href="/orgs/#{@org_name}/edit/profile") 관리
+      - else
+        %a.list-group-item(href="/orgs/#{@org_name}/edit/member") 관리
+  .col-sm-9
+    != yield

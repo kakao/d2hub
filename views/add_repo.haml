@@ -1,0 +1,56 @@
+.row
+  .col-sm-12
+    .panel.panel-default
+      .panel-heading 저장소 추가
+      .panel-body
+        .row
+          .col-sm-offset-1.col-sm-10
+            - unless @error.nil?
+              .alert.alert-danger
+                %strong 문제가 발생했습니다.
+          .col-sm-offset-1.col-sm-10
+            %form(role="form" method="post" action="/repos")
+              .form-group.form-inline
+                %label
+                  %span 저장소명:
+                  %span.text-danger (필수)
+                %br
+                %select.form-control(name="org_name")
+                  - @orgs.each do |org|
+                    - if org[:name] == @org_name
+                      %option(selected="true" )= org[:name]
+                    - else
+                      %option= org[:name]
+                %span &nbsp;
+                %input.form-control(type="text" name="repo_name" placeholder="저장소명" style="width: 235px" autofocus="true" required="true" pattern="^[\.a-z0-9_-]+$" minlength="3" maxlength="30")
+                - if (not @error.nil?) and @error == 'creating_repo_failed'
+                  %span.text-danger 저장소 생성에 실패했습니다. 관리자에게 문의하세요.
+                - if (not @error.nil?) and @error == 'already_exists'
+                  %span.text-danger 동일한 저장소가 이미 존재합니다.
+                - if (not @error.nil?) and @error == 'dismiss_required_fields'
+                  %span.text-danger 이 필드는 반드시 입력해야 합니다.
+                - if (not @error.nil?) and @error == 'invalid_repo_name'
+                  %span.text-danger 새로운 저장소명; 3 - 30자 제한. 소영문자, 숫자, '_-, '-' 문자만 허용됩니다.
+                %p.help-block 새로운 저장소명; 3 - 30자 제한. 소영문자, 숫자, '_-, '-' 문자만 허용됩니다.
+              %br
+              .form-group
+                %label(for="description")
+                  %span 설명
+                  %em.text-muted (옵션)
+                %textarea.form-control(rows="5" maxlength="200" name="short_description")
+                %p.help-block 200자 제한
+              %br
+              .form-group
+                %label(for="access_type") 저장소 타입
+                .radio
+                  %label
+                    %input#public-repo_type(type="radio" name="access_type" value="public" checked="true") 공개
+                .radio
+                  %label
+                    %input#private-repo_type(type="radio" name="access_type" value="private") 비공개
+                %p.help-block#public-repo-message 누구나 이 저장소를 pull하고 검색할 수 있도록 공개됩니다.
+                %p.help-block.hide#private-repo-message 당신과 이 저장소의 공동작업자만이 pull할 수 있습니다. 다른 사람들은 이 저장소를 볼 수 없게 됩니다.
+              %br
+              .form-group
+                %button.btn.btn-primary(type="submit") 저장소 추가
+                %a.btn.btn-link(href="/") 취소

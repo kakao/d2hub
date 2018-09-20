@@ -1,0 +1,35 @@
+.row
+  .col-sm-8
+    - unless @error.nil?
+      .alert.alert-danger
+        %strong 문제가 발생했습니다.
+.row
+  .col-sm-8
+    %h3 멤버
+    %table.table
+      %tbody
+        - @members.each do |member|
+          %tr
+            %td.col-sm-6
+              %a(href="/users/#{member[:name]}" )
+                %img.img-circle(src="#{user_img_url(member[:name], 20)}")
+                %span= member[:name]
+            %td.col-sm-6
+              - if member[:name] != user_id
+                - if member[:role] == 'member'
+                  %form(role="form" method="post" action="/orgs/#{@org_name}/members/#{member[:name]}")
+                    %input(type="hidden" name="_method" value="DELETE")
+                    %button.btn.btn-danger(type="submit") 멤버 삭제
+.row
+  .col-sm-4
+    %h3 멤버 추가
+    %form(role="form" method="post" action="/orgs/#{@org_name}/members")
+      .form-group
+        %input.form-control(type="text" placeholder="사용자명" autofocus="true" autocomplete="false" name="user_name")
+        - if (not @error.nil?) and @error == 'not_exists'
+          %span.text-danger 해당 사용자가 존재하지 않습니다.
+        - elsif (not @error.nil?) and @error == 'already_exists'
+          %span.text-danger 동일한 사용자가 이미 존재합니다.
+      .form-group
+        %button.btn.btn-primary 멤버 추가
+        %a.btn.btn-link(href="/orgs/#{@org_name}/repos") 취소

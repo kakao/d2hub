@@ -1,0 +1,12 @@
+*.swp
+*.db
+.idea
+ext
+.registry
+.env
+docker-compose.yml
+auth_config.yml
+=======
+.DS_Store
+
+!.gitkeep

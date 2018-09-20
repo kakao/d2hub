@@ -1,0 +1,81 @@
+.row
+  .col-sm-9
+    %h3 최근 업데이트된 저장소
+  .col-sm-3
+    != yield
+%br
+.row
+  .col-sm-12
+    - if @repos.length == 0
+      %p.text-center.text-muted
+        %em 저장소가 없습니다.
+    - else
+      .row
+        - @repos.each do |repo|
+          .col-sm-3
+            %a.text-black(href="/orgs/#{repo.organization[:name]}/repos/#{repo[:name]}")
+              .panel.panel-default.repo-panel
+                .panel-body
+                  .row
+                    .col-sm-12
+                      - unless repo.build_tags.empty?
+                        %p.pull-right
+                          %spna.glyphicon.glyphicon-check.text-success
+                      %p= age_ko(repo[:updated_at] || repo[:created_at])
+                      %h4.truncate.text-primary= full_repo_name(repo.organization[:name], repo[:name])
+                      %br
+                      %p.truncate
+                        - if repo[:short_description] == ''
+                          %span &nbsp;
+                        - else
+                          %em.text-muted= repo[:short_description].force_encoding('UTF-8')
+                      %br
+                      %br
+                      .row
+                        .col-sm-6.text-left
+                          %img.vert-center(src="/img/repository-star-icon.svg")
+                          %span= repo.starred_users.count
+                        .col-sm-6.text-right
+                          %img.vert-center(src="/img/repository-cloud-icon.svg")
+                          %span= repo[:download_count]
+%br
+.row
+  .col-sm-6
+    %h4 기여하고 있는 저장소
+    - if @contributed_repos.length == 0
+      %p.text-muted
+        %em 기여하고 있는 저장소가 없습니다.
+    - else
+      %table.table
+        %tbody
+        - @contributed_repos.each do |repo|
+          %tr
+            %td
+              %a(href="/orgs/#{repo.organization[:name]}/repos/#{repo[:name]}")
+                %img.img-circle(src="#{user_img_url(repo.organization[:name], 20)}")
+                %span= full_repo_name(repo.organization[:name], repo[:name])
+              %span.pull-right
+                %span= repo.starred_users.count
+                %span.glyphicon.glyphicon-star
+        %tr
+          %td
+  .col-sm-6
+    %h4 북마크 저장소
+    - if @starred_repos.length == 0
+      %p.text-muted
+        %em
+          %a(href="/search/repos") 저장소 검색
+    - else
+      %table.table
+        %tbody
+        - @starred_repos.each do |repo|
+          %tr
+            %td
+              %a(href="/orgs/#{repo.organization[:name]}/repos/#{repo[:name]}")
+                %img.img-circle(src="#{user_img_url(repo.organization[:name], 20)}")
+                %span= full_repo_name(repo.organization[:name], repo[:name])
+              %span.pull-right
+                %span= repo.starred_users.count
+                %span.glyphicon.glyphicon-star
+        %tr
+          %td

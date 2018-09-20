@@ -1,0 +1,45 @@
+.row
+  .col-sm-12
+    %h3
+      %span Webhook 실행 결과 -
+      %span= @webhook.url
+    %br
+    - if @webhook_payloads.empty?
+      .alert.alert-info(role="alert") Webhook 실행 결과가 없습니다.
+    - else
+      .table-responsive
+        %table.table
+          %thead
+            %tr
+              %th.col-sm-1 ID
+              %th.col-sm-1 응답 코드
+              %th.col-sm-2 생성 시간
+              -#%th.col-sm-9 Payload
+              -#%th.col-sm-1 응답 헤더
+              -#%th.col-sm-1 응답 바디
+          %tbody
+            - @webhook_payloads.each do |paylaod|
+              %tr(onclick="viewPayloadDetail('#{paylaod[:id]}')" style="cursor: pointer;")
+                %td= paylaod[:id]
+                %td
+                  - if 200 <= paylaod[:response_code] and paylaod[:response_code] < 400
+                    %span.label.label-success= paylaod[:response_code]
+                  - else
+                    %span.label.label-danger= paylaod[:response_code]
+                %td= paylaod[:created_at]
+              %tr
+                %td.hidden(colspan="3" id="payload-detail-#{paylaod[:id]}")
+                  .panel.panel-info
+                    .panel-heading 상세 정보
+                    %table.table
+                      %tr
+                        %td.col-sm-2 Payload
+                        %td
+                          .well
+                            %p.textarea-text= paylaod[:payload].force_encoding('UTF-8')
+                      %tr
+                        %td.col-sm-2 응답 헤더
+                        %td= paylaod[:response_headers]
+                      %tr
+                        %td.col-sm-2 응답 바디
+                        %td= paylaod[:response_body]

@@ -1,0 +1,203 @@
+.row#marathonDeploys
+  .col-sm-12
+    .row
+      .col-sm-12
+        %h2
+          %span Marathon 자동 배포
+          %button.btn.btn-info.btn-sm(type="button" data-toggle="modal" data-target="#marathonAppJSON") Marathon JSON 생성
+    %br
+    .row
+      .col-sm-12
+        .panel.panel-default
+          .panel-heading
+            %h4
+              %span 자동 빌드 상세
+              %small (빌드 상세중 하나를 선택하세요. 마우스로 클릭하면 됩니다.)
+          .panel-body
+            .table-responsive
+              %table.table.table-hover.clickable-table
+                %thead
+                  %tr
+                    %th.col-sm-2 Git 타입
+                    %th.col-sm-2 Git 브랜치명
+                    %th.col-sm-2 Dockerfile 위치
+                    %th.col-sm-2 Dockerfile 파일명
+                    %th.col-sm-2 Docker 태그명
+                    %th.col-sm-2 Build Arg
+                %tbody
+                  %tr.clickable-row(v-repeat="build_tag : build_tags" v-on="click: selectBuildTag(build_tag)")
+                    %td.vert-center
+                      %h5 {{build_tag.git_type}}
+                    %td.vert-center
+                      %h5
+                        %span {{build_tag.git_branch_name}}
+                        %span.text-info.small(v-if="build_tag.use_regex") (정규표현식)
+                    %td.vert-center
+                      %h5 {{build_tag.dockerfile_location}}
+                    %td.vert-center
+                      %h5 {{build_tag.dockerfile_name}}
+                    %td.vert-center
+                      %h5 {{build_tag.dockerbuild_arg}}
+                    %td.vert-center
+                      %h5
+                        %span.text-muted.small(v-if="build_tag.use_regex") Git 브랜치명과 동일한 태그명
+                        %span(v-if="!build_tag.use_regex") {{build_tag.docker_tag_name}}
+    %br
+    .row
+      .col-sm-12(v-show="selectedBuildTag")
+        .panel.panel-info
+          .panel-heading
+            %h4
+              %span Marathon 배포 설정
+              %small.text-warning marathon.json의 docker.image는 자동 빌드된 이미지명으로 대체됩니다.
+          .panel-body
+            .row(v-show="deploys.length > 0")
+              .col-sm-12
+                .table-responsive
+                  %table.table
+                    %thead
+                      %tr
+                        %th.col-sm-2 Marathon 서버 URL
+                        %th.col-sm-2 Marathon 서버 인증 정보
+                        %th.col-sm-2 marathon JSON 파일 경로
+                        %th.col-sm-2 환경 변수 (env)
+                        %th.col-sm-2 레이블 (labels)
+                        %th.col-sm-1 수정하기
+                        %th.col-sm-1 삭제하기
+                    %tbody(v-repeat="deploy : deploys")
+                      %tr
+                        %td {{deploy.marathon_url}}
+                        %td {{deploy.marathon_basic_auth}}
+                        %td {{deploy.marathon_json_path}}
+                        %td {{deploy.env_vars}}
+                        %td {{deploy.label_vars}}
+                        %td
+                          %button.btn.btn-warning(type="button" data-toggle="modal" data-target="#marathonDeployModal" v-on="click: setDeployObj(deploy)") 수정하기
+                        %td
+                          %button.btn.btn-danger(type="button" v-on="click: remove(deploy)") 삭제하기
+            %br
+            .row
+              .col-sm-12
+                %button.btn.btn-success.btn-lg(type="button" data-toggle="modal" data-target="#marathonDeployModal") 새로운 배포 설정 추가
+
+  .modal.fade#marathonDeployModal(tabindex="-1" role="dialog" aria-labelledby="newMarathonModalLabel" )
+    .modal-dialog.modal-lg(role="document" )
+      .modal-content
+        .modal-header
+          %button.close(type="button" data-dismiss="modal" aria-label="Close" )
+            %span(aria-hidden="true" ) &times;
+          %h4.modal-title#newMarathonModalLabel Marathon 자동 배포 설정
+        .modal-body
+          .panel.panel-default
+            .panel-heading
+              %strong 자동 빌드 상세
+              %small (Marathon 자동 배포가 적용될 자동 빌드 상세입니다.)
+            .panel-body
+              .table-responsive
+                %table.table
+                  %thead
+                    %tr
+                      %th.col-sm-2 Git 타입
+                      %th.col-sm-2 Git 브랜치명
+                      %th.col-sm-2 Dockerfile 위치
+                      %th.col-sm-2 Dockerfile 파일명
+                      %th.col-sm-2 Docker 태그명
+                      %th.col-sm-2 Build Arg
+                  %tbody
+                    %tr
+                      %td.vert-center {{selectedBuildTag.git_type}}
+                      %td.vert-center
+                        %span {{selectedBuildTag.git_branch_name}}
+                        %span.text-info.small(v-if="selectedBuildTag.use_regex") (정규표현식)
+                      %td.vert-center {{selectedBuildTag.dockerfile_location}}
+                      %td.vert-center {{selectedBuildTag.dockerbuild_arg}}
+                      %td.vert-center {{selectedBuildTag.dockerfile_name}}
+                      %td.vert-center
+                        %span.text-muted.small(v-if="selectedBuildTag.use_regex") Git 브랜치명과 동일한 태그명
+                        %span(v-if="!selectedBuildTag.use_regex") {{selectedBuildTag.docker_tag_name}}
+          .panel.panel-success
+            .panel-heading
+              %strong Marathon 자동 배포 설정
+              %small (빌드가 완료되면 자동으로 Marathon으로 배포가 됩니다.)
+            .panel-body
+              %form
+                .form-group
+                  %label(for="deployMarathonURL")
+                    %span Marathon 서버 URL
+                    %span.text-danger (필수)
+                  %input.form-control#deployMarathonURL(type="text" v-model="deployObj.marathon_url" placeholder="http://marathon.example.com" )
+                .form-group
+                  %label(for="deployMarathonBasicAuth")
+                    %span Marathon 서버 인증 정보
+                    %em.text-muted (옵션)
+                  %input.form-control#deployMarathonBasicAuth(type="text" v-model="deployObj.marathon_basic_auth" placeholder="username:password" )
+                .form-group
+                  %label(for="deployMarathonJSONPath")
+                    %span Marathon JSON 파일
+                    %span.text-danger (필수)
+                    %span (github 저장소에 있는 json 파일입니다.)
+                  %input.form-control#deployMarathonJSONPath(type="text" v-model="deployObj.marathon_json_path" placeholder="marathon.json" )
+                .form-group
+                  %label(for="deployEnvVars")
+                    %span 애플리케이션 환경변수
+                    %em.text-muted (옵션)
+                    %span (envs 속성에 추가됩니다.)
+                  %textarea.form-control#deployEnvVars(v-model="deployObj.env_vars" placeholder="key=value" rows="3")
+                .form-group
+                  %label(for="deployLabelVars")
+                    %span 애플리케이션 레이블
+                    %em.text-muted (옵션)
+                    %span (label 속성에 추가됩니다.)
+                  %textarea.form-control#deployLabelVars(v-model="deployObj.label_vars" placeholder="key=value" rows="3")
+        .modal-footer
+          %button.btn.btn-success(v-show="!deployObj.build_tag_id" type="button" v-on="click: add" disabled="{{!isValidDeployObj()}}") 배포 설정 추가
+          %button.btn.btn-warning(v-show="deployObj.build_tag_id" type="button" v-on="click: update" disabled="{{!isValidDeployObj()}}") 배포 설정 수정
+          %button.btn.btn-default(type="button" data-dismiss="modal") 취소
+  .modal.fade#marathonAppJSON(tabindex="-1" role="dialog" aria-labelledby="marathonAppJSONModalLabel" )
+    .modal-dialog(role="document" )
+      .modal-content
+        .modal-header
+          %button.close(type="button" data-dismiss="modal" aria-label="Close" )
+            %span(aria-hidden="true" ) &times;
+          %h4.modal-title#marathonAppJSONModalLabel Marathon JSON 생성
+        .modal-body
+          %form
+            %input(type="hidden" v-model="newApp.image" value="d2hub.com/#{full_repo_name(@repo.organization[:name], @repo[:name])}")
+            .form-group
+              %label(for="newAppID")
+                %span Application ID
+                %span.text-danger (필수)
+              %input.form-control#newAppID(type="text" v-model="newApp.id" placeholder="#{@repo.name}" value="#{@repo.name}")
+            .form-group
+              %label(for="newAppCPUs")
+                %span CPUs
+                %span.text-danger (필수)
+                %small.text-muted 애플리케이션에 할당되는 최소 보장 CPU 값입니다.
+              %input.form-control#newAppCPUs(type="number" v-model="newApp.cpus" placeholder="0.1" value="0.1" step="0.1" min="0.0" number)
+            .form-group
+              %label(for="newAppMemory")
+                %span Memory
+                %span.text-danger (필수)
+                %small.text-muted 애플리케이션에 할당되는 최대 Memory(MB 단위)입니다.
+              %input.form-control#newAppMemory(type="number" v-model="newApp.memory" placeholder="256" value="256" step="64" min="0" number)
+              %p.help-block
+                %small.text-warning Java(JVM 계열의 언어)를 사용하는 경우 최소 512MB 이상으로 지정하셔야 합니다.
+            .form-group
+              %label(for="newAppPort")
+                %span Container Port
+                %span.text-danger (필수)
+                %small.text-muted docker가 실행될 때 사용하는 포트입니다.
+              %input.form-control#newAppPort(type="number" v-model="newApp.port" placeholder="8080" min="0" number)
+              %p.help-block
+                %small.text-warning $PORT 환경변수를 애플리케이션 포트로 사용하고 있다면 0으로 설정하면 됩니다.
+            .form-group
+              %label(for="newAppHealthCheckPath")
+                %span health check 경로
+                %span.text-muted (옵션)
+                %small.text-muted health check로 사용되는 URL 경로입니다.
+              %input.form-control#newAppHealthCheckPath(type="text" v-model="newApp.healthCheckPath" placeholder="/_hcheck.jsp")
+              %p.help-block
+                %small.text-warning 200 ~ 399 사이의 응답 코드를 성공으로 인식합니다.
+        .modal-footer
+          %button.btn.btn-success#copyNewAppJSON(type="button" disabled="{{!isValidNewApp()}}") JSON 복사 하기
+          %button.btn.btn-default(type="button" data-dismiss="modal") 취소

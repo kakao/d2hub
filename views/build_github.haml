@@ -1,0 +1,9 @@
+.row
+  .col-sm-2
+  - settings.github_infos.each do |key, github_info|
+    .col-sm-4.text-center
+      %div
+        %img(src="#{github_info[:image]}")
+      %div
+        %a.btn.btn-info.btn-lg.btn-block(href="https://#{github_info[:host]}/login/oauth/authorize?scope=user:email,repo,read:org&client_id=#{github_info[:client_id]}" type="button")= github_info[:name]
+  .col-sm-2

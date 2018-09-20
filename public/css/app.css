@@ -1,0 +1,97 @@
+/*.repo {*/
+    /*word-wrap: break-word;*/
+    /*position: relative;*/
+    /*height: 200px!important;*/
+    /*color: #434a54;*/
+    /*clear: right;*/
+/*}*/
+
+/*.box {*/
+    /*padding: 18px;*/
+    /*margin-right: 20px;*/
+    /*margin-bottom: 20px;*/
+    /*border: 1px solid #dbdde0;*/
+    /*border-radius: 4px;*/
+    /*-webkit-border-radius: 4px;*/
+    /*-moz-border-radius: 4px;*/
+    /*float: left;*/
+/*}*/
+
+.font-size-big {
+    font-size: 1.3em;
+}
+
+.vert-center {
+    vertical-align: middle!important;
+}
+
+.tab-content {
+    margin: 10px 20px;
+}
+
+.menu-text {
+    font-size: 16px;
+}
+
+/* enable absolute positioning */
+.inner-addon {
+    position: relative;
+}
+
+/* style icon */
+.inner-addon .glyphicon {
+    position: absolute;
+    padding: 10px;
+    pointer-events: none;
+}
+
+/* align icon */
+.left-addon .glyphicon  { left:  0px;}
+.right-addon .glyphicon { right: 0px;}
+
+/* add padding  */
+.left-addon input  { padding-left:  30px; }
+.right-addon input { padding-right: 30px; }
+
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.text-black {
+    color: #000000;
+}
+
+.text-white {
+    color: #ffffff;
+}
+
+.text-link {
+    text-decoration: underline;
+}
+
+.sidebar {
+    background: #f4f4f4;
+}
+
+.table {
+    table-layout:fixed;
+}
+
+.table td {
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dropdown-menu {
+    min-width:auto;
+    width:100%;
+}
+
+.text-white-underline {
+    color: #ffffff;
+    text-decoration: underline;
+}
+

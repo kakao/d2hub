@@ -1,0 +1,125 @@
+.row
+  .col-sm-12
+    .panel.panel-default
+      .panel-heading 자동 빌드 변경
+      .panel-body
+        .row
+          .col-sm-offset-1.col-sm-10
+            - unless @error.nil?
+              .alert.alert-danger
+                %strong 문제가 발생했습니다.
+              - if (not @error.nil?) and @error == 'invalidbuildarg'
+                %span.text-danger build argument을 파싱하는데 실패했습니다.
+
+          .col-sm-offset-1.col-sm-10
+            %form(role="form" method="post" action="/orgs/#{@repo.organization[:name]}/repos/#{@repo[:name]}" onsubmit="saveRepo()" )
+              %input(type="hidden" name="_method" value="PUT")
+              %input(type="hidden" name="github_repo_id" value="#{@github_repo_id}")
+              .form-group
+                .row
+                  .col-sm-4
+                    %label(for="githubRepo") github 저장소명
+                    %input.form-control#githubRepo(type="text" disabled="true" value="#{@github_repo_full_name}")
+              %br
+              .form-group
+                %input#buildTagsFormValue(type="hidden" name="build_tags")
+                %label 태그
+                %span.text-info.small &nbsp;(Git 브랜치명에 Ruby 정규표현식을 사용할 수 있습니다.
+                %span
+                  %a.text-danger(href="http://rubular.com/" target="_blank") 여기
+                %span.text-info.small 에서 정규표현식을 테스트 할 수 있습니다.)
+                %br
+                %label Docker Build Argument
+                %span.text-info.small 다음과 같은 json 리스트이어야 합니다. [{"name":"arg1", "value":"val1"},{"name":"arg2","value":"val2"}]
+                %br
+                %br
+                .table-responsive#buildTags
+                  %table.table.table-striped.table-hover
+                    %thead
+                      %tr
+                        %th.col-sm-2 Git 타입
+                        %th.col-sm-2 Git 브랜치명
+                        %th.col-sm-2 Dockerfile 위치
+                        %th.col-sm-2 Dockerfile 파일명
+                        %th.col-sm-2 Docker 태그명
+                        %th.col-sm-2 Build Arg
+                        %th.col-sm-2
+                    %tbody(v-repeat="tags")
+                      %tr
+                        %td
+                          %select.form-control(v-model="git_type")
+                            %option Branch
+                            %option Tag
+                        %td
+                          %input.form-control(type="text" v-model="git_branch_name")
+                          %span.checkbox
+                            %label
+                              %input(type="checkbox" v-model="use_regex")
+                              %span 정규표현식 사용
+                        %td
+                          %input.form-control(type="text" v-model="dockerfile_location")
+                        %td
+                          %input.form-control(type="text" v-model="dockerfile_name")
+                        %td
+                          %input.form-control(v-show="!use_regex" type="text" v-model="docker_tag_name")
+                          %p.help-block(v-show="use_regex") Git 브랜치명과 동일한 태그명이 만들어집니다.
+                        %td
+                          %textarea.form-control(v-model="dockerbuild_arg")
+
+                        %td(v-if="$index == 0")
+                          %button.btn.btn-primary(type="button" v-on="click: addDockerTag")
+                            %span.glyphicon.glyphicon-plus(aria-hidden="true")
+                            추가
+                        %td(v-if="$index != 0")
+                          %button.btn.btn-danger(type="button" v-on="click: removeDockerTag($index)")
+                            %span.glyphicon.glyphicon-minus(aria-hidden="true")
+                            제거
+              .form-group
+                %label(for="access_type") 저장소 타입
+                .radio
+                  %label
+                    - if @repo.access_type == 'public'
+                      %input#public-repo_type(type="radio" name="access_type" value="public" checked="true") 공개
+                    - else
+                      %input#public-repo_type(type="radio" name="access_type" value="public") 공개
+                    %span.text-success (누구나 이 저장소를 pull하고 검색할 수 있도록 공개됩니다.)
+                .radio
+                  %label
+                    - if @repo.access_type == 'private'
+                      %input#private-repo_type(type="radio" name="access_type" value="private" checked="true") 비공개
+                    - else
+                      %input#private-repo_type(type="radio" name="access_type" value="private") 비공개
+                    %span.text-warning (당신과 이 저장소의 공동작업자만이 pull할 수 있습니다.)
+              - if D2HUB::use_watchcenter == 'true'
+                %br
+                .form-group
+                  .row
+                    .col-sm-6
+                      %label(for="watchCenterID") WatchCenter 알람등록
+                      %span.text-info.small (빌드 시작과 완료시 알람이 갑니다.)
+                      %input.form-control#watchCenterID(type="text" name="watch_center_id" placeholder="WatchCenter 2.0 아이디(숫자)를 입력하세요. (옵션)" value="#{@repo.watch_center_id}")
+              %br
+              .form-group
+                %label 자동 빌드 활성화
+                - if @repo.active_build
+                  .radio
+                    %label
+                      %input#enable_build(type="radio" name="active_build" value="on" checked="true") ON
+                      %span.text-success (Push할 때마다 Docker 이미지를 빌드합니다.)
+                  .radio
+                    %label
+                      %input#disable_build(type="radio" name="active_build" value="off") OFF
+                      %span.text-warning (자동 빌드가 수행되지 않습니다.)
+                - else
+                  .radio
+                    %label
+                      %input#enable_build(type="radio" name="active_build" value="on") ON
+                      %span.text-success (Push할 때마다 자동 빌드가 수행됩니다.)
+                  .radio
+                    %label
+                      %input#disable_build(type="radio" name="active_build" value="off" checked="true") OFF
+                      %span.text-warning (자동 빌드가 수행되지 않습니다.)
+              %br
+              .form-group
+                %button.btn.btn-primary(type="submit") 설정 저장
+                %a.btn.btn-link(href="/") 취소

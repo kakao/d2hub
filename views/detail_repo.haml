@@ -1,0 +1,405 @@
+.row
+  .col-sm-9(role="tabpanel")
+    %ul.nav.nav-tabs.nav-justified#repoTab(role="tablist")
+      %li.active(role="presentation")
+        %a(onclick="fixRepoTab('information')" href="#information" aria-controls="information" role="tab" data-toggle="tab") 정보
+      - unless @repo.build_tags.empty?
+        %li(role="presentation")
+          %a(onclick="fixRepoTab('dockerfile')" href="#dockerfile" aria-controls="dockerfile" role="tab" data-toggle="tab") Dockerfile
+        %li(role="presentation")
+          %a(onclick="fixRepoTab('buildDetail')" href="#buildDetail" aria-controls="buildDetail" role="tab" data-toggle="tab") 자동 빌드
+      %li(role="presentation")
+        %a(onclick="fixRepoTab('tags')" href="#tags" aria-controls="tags" role="tab" data-toggle="tab") 태그
+    .tab-content
+      .tab-pane.active#information(role="tabpanel")
+        != parse_markdown(@repo[:description].force_encoding('UTF-8'))
+      - unless @repo.build_tags.empty?
+        .tab-pane#dockerfile(role="tabpanel")
+          %br
+          .well
+            %p.textarea-text= @dockerfile_content.force_encoding('UTF-8')
+        .tab-pane#buildDetail(role="tabpanel")
+          %br
+          .row
+            .col-sm-6
+              %h4
+                자동 빌드 상세
+                %small
+                  %span (
+                  - if @repo.active_build
+                    %span.text-success 자동 빌드
+                    %strong.text-success ON
+                  - else
+                    %span.text-muted 자동 빌드
+                    %strong.text-muted OFF
+                  %span ,
+                  - if @repo.watch_center_id != ''
+                    %span.text-success 빌드 알람
+                    %strong.text-success ON
+                  - else
+                    %span.text-muted 빌드 알람
+                    %strong.text-muted OFF
+                  %span )
+            - if has_authority_of_repository? @repo.organization[:name], @repo[:name]
+              .col-sm-6
+                %a.pull-right(href="/orgs/#{@repo.organization[:name]}/repos/#{@repo[:name]}/automated_builds") 자동 빌드 변경
+          .row
+            .col-sm-12
+              .table-responsive
+                %table.table
+                  %thead
+                    %tr
+                      %th.col-sm-1 Git 타입
+                      %th.col-sm-3 Git 브랜치명
+                      %th.col-sm-2 Dockerfile 위치
+                      %th.col-sm-2 Dockerfile 파일명
+                      %th.col-sm-2 Docker 태그명
+                      %th.col-sm-2 Build Arg
+                      - if has_authority_of_repository? @repo.organization[:name], @repo[:name]
+                        %th.col-sm-2 직접 빌드 하기
+
+                  %tbody
+                    - @repo.build_tags.each do |build_tag|
+                      %tr
+                        %td= build_tag.git_type
+                        %td
+                          %span= build_tag.git_branch_name
+                          - if build_tag.use_regex
+                            %span.text-info.small (정규표현식)
+                        %td= build_tag.dockerfile_location
+                        %td= build_tag.dockerfile_name
+                        %td
+                          - if build_tag.use_regex
+                            %span.text-muted.small Git 브랜치명과 동일한 태그명
+                          - else
+                            %span= build_tag.docker_tag_name
+                        %td= build_tag.dockerbuild_arg
+                        - if has_authority_of_repository? @repo.organization[:name], @repo[:name]
+                          %td
+                            - if build_tag.use_regex
+                              %span.text-muted.small 정규표현식은 직접 빌드할 수 없습니다.
+                            - else
+                              %form(role="form" method="post" action="/build-tags/#{build_tag[:id]}/build")
+                                %button.btn.btn-success.btn-xs(type="submit")
+                                  %span.glyphicon.glyphicon-play
+                                  빌드 시작
+          - unless @build_histories.empty?
+            %br
+            .row
+              .col-sm-12
+                %h4
+                  %span 빌드 히스토리
+                  %small (최근 30개까지만 표시됩니다.)
+            .row
+              .col-sm-12
+                .table-responsive
+                  %table.table
+                    %thead
+                      %tr
+                        %th.col-sm-2 빌드 ID
+                        %th.col-sm-2 상태
+                        %th.col-sm-3 생성 시간
+                        %th.col-sm-3 최근 업데이트 시간
+                        - if has_authority_of_repository? @repo.organization[:name], @repo[:name]
+                          %th.col-sm-2 다시 빌드 하기
+                    %tbody
+                      - @build_histories.each do |build_history|
+                        %tr
+                          %td
+                            %a(href="/build-histories/#{build_history.id}")= build_history.id
+                          %td
+                            - if build_history.status == 'success'
+                              %span.label.label-success 빌드 성공
+                            - elsif build_history.status == 'building'
+                              %span.label.label-warning 빌드중
+                            - else
+                              %span.label.label-danger 빌드 실패
+                          %td= age_ko(build_history.created_at)
+                          %td= age_ko(build_history.updated_at)
+                          - if has_authority_of_repository? @repo.organization[:name], @repo[:name]
+                            %td
+                              - unless build_history.git_type == ''
+                                %form(role="form" method="post" action="/build-histories/#{build_history.id}/rebuild")
+                                  %button.btn-warning.btn.btn-xs(type="submit")
+                                    %span.glyphicon.glyphicon-play
+                                    빌드 시작
+      .tab-pane#tags(role="tabpanel")
+        %br
+        - if D2HUB::use_antivirus == 'true'
+          .alert.alert-warning(role="alert")
+            %span.glyphicon.glyphicon-ok
+            %span 백신 탐지 및 중요 취약점
+            %span (
+            %span.text-danger Defcon, Critical
+            %span )
+            %span 검출시 반드시 조치가 필요합니다.
+            %br
+            %span &nbsp; &nbsp;
+            %span (자세한 내용은 링크 혹은
+            %a(href="#{settings.antivirus_link}" target="_blank")= settings.antivirus_name
+            %span 로 문의 바랍니다.)
+        .col-sm-12#imageTags
+          %div(v-if="tags && tags.length > 0")
+          %h5(v-repeat="tag : tags")
+            %span {{ tag.name }}
+            %span &nbsp;
+            %a.image-remove(href="" data-toggle="modal" data-target="#deleteImageModal" data-tag-name="{{tag.name}}" onclick= "$('#tag-name').val($(this).data('tag-name'));")
+              %span.glyphicon.glyphicon-trash
+            - if D2HUB::use_antivirus == 'true'
+              %span(v-if="tag.status == 1")
+                %span (
+                %span.label.label-danger(v-if="tag.av_detect_cnt > 0")
+                  %span 백신 탐지
+                  %a.text-white(href="{{ drscanResultURL(tag.ticket_id) }}" target="_blank")
+                    %u
+                      %span {{ tag.av_detect_cnt }}
+                      %span 건
+                %span.label.label-success(v-if="tag.av_detect_cnt == 0")
+                  %span 백신 탐지
+                  %a.text-white(href="{{ drscanResultURL(tag.ticket_id) }}" target="_blank")
+                    %u
+                      %span {{ tag.av_detect_cnt }}
+                      %span 건
+                %span &nbsp;
+                %span.label.label-danger(v-if="tag.clair_detect_cnt > 0")
+                  %span 중요 취약점 검출
+                  %a.text-white(href="{{ drscanResultURL(tag.ticket_id) }}" target="_blank")
+                    %u
+                      %span {{ tag.clair_detect_cnt }}
+                      %span 건
+                %span.label.label-success(v-if="tag.clair_detect_cnt == 0")
+                  %span 중요 취약점 검출
+                  %a.text-white(href="{{ drscanResultURL(tag.ticket_id) }}" target="_blank")
+                    %u
+                      %span {{ tag.clair_detect_cnt }}
+                      %span 건
+                %span &nbsp;)
+              %span(v-if="tag.status == 2")
+                %span (
+                %span.label.label-info
+                  %span 백신 탐지 및 취약점
+                  %a.text-white(href="{{ drscanResultURL(tag.ticket_id) }}" target="_blank")
+                    %u
+                      검출중
+                  %span ...
+                %span )
+              %span(v-if="tag.status == 3")
+                %span (
+                %span.label.label-warning
+                  %span 백신 검사
+                  %a.text-white(href="{{ drscanResultURL(tag.ticket_id) }}" target="_blank")
+                    %u
+                      실패
+                %span )
+          -#- if has_authority_of_repository?(@repo.organization[:name], @repo[:name]) and tag != 'latest'
+          -#  .col-sm-1
+          -#    %a.tag-remove(href="" data-toggle="modal" data-target="#deleteTagModal" data-tag-name="#{tag}") X
+  .col-sm-3
+    .row
+      .col-sm-12
+        .panel.panel-default
+          .panel-heading
+            %h4 속성
+          .panel-body
+            %ul.list-unstyled
+              %li
+                %span.glyphicon.glyphicon-time
+                %span= age_ko(@repo[:created_at])
+              %li
+                %a(href="/orgs/#{@repo.organization[:name]}/repos")
+                  %img.img-circle(src="#{user_img_url(@repo.organization[:name], 18)}")
+                  = @repo.organization[:name]
+    - if has_authority_of_repository? @repo.organization[:name], @repo[:name]
+      .row
+        .col-sm-12
+          .panel.panel-default
+            .panel-heading
+              %h4 세팅
+            .panel-body
+              %ul.list-unstyled
+                %li
+                  %a(href="/orgs/#{@repo.organization[:name]}/repos/#{@repo[:name]}/edit/profile")
+                    %span.glyphicon.glyphicon-edit
+                    %span 설명
+                - unless @repo.build_tags.empty?
+                  %li
+                    %a(href="/orgs/#{@repo.organization[:name]}/repos/#{@repo[:name]}/automated_builds")
+                      %span.glyphicon.glyphicon-link
+                      %span 자동 빌드
+                  %li
+                    %a(href="/orgs/#{@repo.organization[:name]}/repos/#{@repo[:name]}/marathon_deploy")
+                      %span.glyphicon.glyphicon-tasks
+                      %span Marathon 자동 배포
+                  %li
+                    %a(href="/orgs/#{@repo.organization[:name]}/repos/#{@repo[:name]}/kubernetes_deploy")
+                      %span.glyphicon.glyphicon-tasks
+                      %span Kubernetes 자동 배포
+                  %li
+                    %a(href="/orgs/#{@repo.organization[:name]}/repos/#{@repo[:name]}/webhooks")
+                      %span.glyphicon.glyphicon-open-file
+                      %span Webhook
+                %li
+                  %a(href="/orgs/#{@repo.organization[:name]}/repos/#{@repo[:name]}/collabors")
+                    %span.glyphicon.glyphicon-user
+                    %span 공동작업자
+                - if @repo[:access_type] == 'public'
+                  %li
+                    %a(href="" data-toggle="modal" data-target="#makePrivateModal")
+                      %span.glyphicon.glyphicon-lock
+                      %span 비공개로 전환
+                - if @repo[:access_type] == 'private'
+                  %li
+                    %a(href="" data-toggle="modal" data-target="#makePublicModal")
+                      %span.glyphicon.glyphicon-share
+                      %span 공개로 전환
+                %li
+                  %a(href="/orgs/#{@repo.organization[:name]}/repos/#{@repo[:name]}/pushkeys")
+                    %span.glyphicon.glyphicon-cog
+                    %span Push Key 관리
+                %li
+                  %a(href="" data-toggle="modal" data-target="#deleteRepositoryModal")
+                    %span.glyphicon.glyphicon-trash
+                    %span 저장소 삭제
+    - unless @repo.build_tags.empty?
+      .row
+        .col-sm-12
+          .panel.panel-default
+            .panel-heading
+              %h4 자동 빌드 속성
+            .panel-body
+              %ul.list-unstyled
+                %li
+                  %a(href="#{@github_address}" target="_blank")
+                    %span.glyphicon.glyphicon-link
+                    %span github 저장소
+
+.row
+  .col-sm-6
+    %h4
+      %span 댓글
+      %a#comment-open-btn(href="#comment-form" rel="tooltip" onclick="openCommentForm()" data-toggle="tooltip" data-placement="top" title="댓글 추가")
+        %span.glyphicon.glyphicon-plus.text-black
+      %a#comment-close-btn.hide(href="#comment-form" rel="tooltip" onclick="closeCommentForm()" data-toggle="tooltip" data-placement="top" title="접기")
+        %span.glyphicon.glyphicon-minus.text-black
+    %form.hide#comment-form(role="form" method="post" action="/comments" onsubmit="return checkCommentForm()" )
+      .form-group
+        %span.label.label-info
+          %a.text-white.text-link(href="http://daringfireball.net/projects/markdown/syntax") markdown syntax
+          %span 를 지원합니다.
+      .form-group
+        %textarea.form-control#comment-contents(rows="5" cols="40" name="contents" placeholder="댓글을 달아주세요." autofocus="true" )
+        %span.text-danger.hide#empty-contents-error 댓글을 입력해야 합니다.
+      .form-group
+        %button.btn.btn-primary(type="submit") 댓글달기
+        %a.btn.btn-link(href="#comment-form" onclick="closeCommentForm()") 취소
+      .form-group
+        %input(type="hidden" name="org_name" value="#{@repo.organization[:name]}")
+        %input(type="hidden" name="repo_name" value="#{@repo[:name]}")
+%br
+%br
+
+.row
+  .col-sm-7
+    - if @comments.length == 0
+      %p.text-muted
+        %em 댓글이 없습니다.
+    - else
+      %table.table
+        - @comments.each do |comment|
+          %tr
+            %td
+              .comment
+                .comment-header
+                  .pull-right
+                    %em.text-muted= age_ko(comment[:created_at])
+                    - if comment[:user_name] == user_id
+                      %a.comment-remove(href="" data-toggle="modal" data-target="#deleteCommentModal" data-comment-id="#{comment[:id]}")
+                        %span.glyphicon.glyphicon-remove.text-danger
+                  %h5
+                    %a(href="/users/#{comment[:user_name]}")
+                      %img.img-circle(src="#{user_img_url(comment[:user_name], 20)}")
+                      %span= comment[:user_name]
+                .comment-body!= parse_markdown(comment[:contents].force_encoding('UTF-8'))
+              %br
+        %tr
+          %td
+.modal.fade#makePrivateModal
+  .modal-dialog
+    .modal-content
+      .modal-header
+        %button.close(type="button" data-dismiss="modal")
+          %span(aria-hidden="true") &times;
+          %span.sr-only 닫기
+        %h4.modal-title 비공개로 전환
+      .modal-body
+        %h4 저장소를 비공개로 전환하겠습니까?
+        %p 정말로 비공개로 전환하시겠습니까?
+        %p 비공개로 전환하면 이 저장소에 접근이 제한됩니다.
+      .modal-footer
+        %button.btn.btn-danger(type="button" onclick="makePrivate('#{@repo.organization[:name]}', '#{@repo[:name]}')") 비공개로 전환
+        %button.btn.btn-primary(type="button" data-dismiss="modal") 취소
+.modal.fade#makePublicModal
+  .modal-dialog
+    .modal-content
+      .modal-header
+        %button.close(type="button" data-dismiss="modal")
+          %span(aria-hidden="true") &times;
+          %span.sr-only 닫기
+        %h4.modal-title 공개로 전환
+      .modal-body
+        %h4 저장소를 공개로 전환하겠습니까?
+        %p 정말로 공개로 전환하시겠습니까?
+        %p 저장소를 공개하면 모든 사용자가 이 저장소를 pull 할 수 있게 되고 검색 할 수 있게 됩니다.
+      .modal-footer
+        %button.btn.btn-danger(type="button" onclick="makePublic('#{@repo.organization[:name]}', '#{@repo[:name]}')") 공개로 전환
+        %button.btn.btn-primary(type="button" data-dismiss="modal") 취소
+.modal.fade#deleteRepositoryModal
+  .modal-dialog
+    .modal-content
+      .modal-header
+        %button.close(type="button" data-dismiss="modal")
+          %span(aria-hidden="true") &times;
+          %span.sr-only 닫기
+        %h4.modal-title 저장소 삭제
+      .modal-body
+        %h4 저장소 삭제
+        %p 정말로 저장소를 삭제하겠습니까?
+        %p 한번 삭제된 저장소는 복구할 수 없습니다!
+      .modal-footer
+        %button.btn.btn-danger(type="button" onclick="deleteRepository('#{user_id}', '#{@repo.organization[:name]}', '#{@repo[:name]}')") 저장소 삭제
+        %button.btn.btn-primary(type="button" data-dismiss="modal") 아니요. 취소하겠습니다.
+
+.modal.fade#deleteCommentModal
+  .modal-dialog
+    .modal-content
+      .modal-header
+        %button.close(type="button" data-dismiss="modal")
+          %span(aria-hidden="true") &times;
+          %span.sr-only 닫기
+        %h4.modal-title 댓글 삭제
+      .modal-body
+        %h4 정말로 댓글을 삭제하겠습니까?
+        %p 한번 삭제된 댓글은 복구할 수 없습니다.
+      .modal-footer
+        %input#comment-id(type="hidden" value="")
+        %button.btn.btn-danger(type="button" onclick="deleteComment()") 댓글 삭제
+        %button.btn.btn-primary(type="button" data-dismiss="modal") 취소
+
+.modal.fade#deleteImageModal
+  .modal-dialog
+    .modal-content
+      .modal-header
+        %button.close(type="button" data-dismiss="modal")
+          %span(aria-hidden="true") &times;
+          %span.sr-only 닫기
+        %h4.modal-title 이미지 삭제
+      .modal-body
+        %p 정말로 이 이미지를 삭제하겠습니까?
+        %p 해당 이미지와 연관된 모든 태그는 함께 삭제됩니다.
+        %p 한번 삭제된 이미지는 복구할 수 없습니다.
+      .modal-footer
+        %input#tag-name(type="hidden" value="")
+        %button.btn.btn-danger(type="button" onclick="deleteImage('#{@repo.organization[:name]}', '#{@repo[:name]}')") 이미지 삭제
+        %button.btn.btn-primary(type="button" data-dismiss="modal") 취소
+
+

@@ -1,0 +1,50 @@
+.container
+  - unless @repo.build_tags.empty?
+    .row
+      .col-sm-6
+        %h4
+          %span.label.label-success
+            %span.glyphicon.glyphicon-check
+            자동 빌드 적용됨
+  .row
+    .col-sm-6
+      %h4
+        - unless D2HUB::admin_organization? @repo.organization[:name]
+          %a(href="/orgs/#{@repo.organization[:name]}/repos")= @repo.organization[:name]
+          %span /
+        %span
+          %a(href="/orgs/#{@repo.organization[:name]}/repos/#{@repo[:name]}")= @repo[:name]
+      %p.textarea-text= @repo[:short_description].force_encoding('UTF-8')
+    .col-sm-6
+      %form.form-horizontal(role="form")
+        .form-group
+          %label.col-sm-3.control-label(for="dockerPullURL") 이 저장소 pull 하기
+          .col-sm-9
+            - if D2HUB::admin_organization? @repo.organization[:name]
+              %input.form-control#dockerPullURL{type: 'text', value:"docker pull d2hub.com/#{@repo[:name]}", readonly: true}
+            - else
+              %input.form-control#dockerPullURL{type: 'text', value:"docker pull d2hub.com/#{@repo.organization[:name]}/#{@repo[:name]}", readonly: true}
+  %br
+  .row
+    .col-sm-12
+      .pull-left
+        - if @is_check_star
+          %img.vert-center.hide#star-disable-icon(src="/img/repository-star-icon.svg")
+          %img.vert-center#star-enable-icon(src="/img/repository-star-active-icon.svg")
+        - else
+          %img.vert-center#star-disable-icon(src="/img/repository-star-icon.svg")
+          %img.vert-center.hide#star-enable-icon(src="/img/repository-star-active-icon.svg")
+        %a.font-size-big.vert-center#star-count(href="#" onclick="clickStarToRepo('#{@repo.organization[:name]}', '#{@repo[:name]}')")
+          = @repo.starred_users.count
+        %span &nbsp;
+        %img.vert-center(src="/img/repository-comments-icon.svg")
+        %span.font-size-big.vert-center
+          = @repo.comments.count
+        %span &nbsp;
+        %img.vert-center(src="/img/repository-cloud-icon.svg")
+        %span.font-size-big.vert-center
+          = @repo[:download_count]
+  %br
+  .row
+    .col-sm-12
+      != yield

@@ -1,0 +1,36 @@
+.row
+  .col-sm-8
+    %h3 조직 설명 수정
+    %form(role="form" method="post" action="/orgs/#{@org[:name]}")
+      %input(type="hidden" name="_method" value="PUT")
+      .form-group
+        .alert.alert-info(role="alert")
+          %a(href="http://daringfireball.net/projects/markdown/syntax") markdown syntax
+          %span 를 지원합니다.
+      .form-group
+        %textarea.form-control(rows="10" name="description")= @org[:description].force_encoding('UTF-8')
+      .form-group
+        %button.btn.btn-primary(type="submit") 저장
+        %a.btn.btn-link(href="/orgs/#{@org[:name]}/repos") 취소
+- unless primary_organization? @org[:name]
+  .row
+    .col-sm-8
+      %h3 조직 삭제
+      %button.btn.btn-danger(type="button" data-toggle="modal" data-target="#deleteOrganizationModal")
+        %span.glyphicon.glyphicon-trash
+        %span 삭제
+  .modal.fade#deleteOrganizationModal
+    .modal-dialog
+      .modal-content
+        .modal-header
+          %button.close(type="button" data-dismiss="modal")
+            %span(aria-hidden="true") &times;
+            %span.sr-only 닫기
+          %h4.modal-title 조직 삭제
+        .modal-body
+          %h4 조직 삭제
+          %p 정말로 조직을 삭제하겠습니까?
+          %p 한번 삭제된 조직은 복구할 수 없습니다!
+        .modal-footer
+          %button.btn.btn-danger(type="button" onclick="deleteOrganization('#{user_id}', '#{@org[:name]}')") 조직 삭제
+          %button.btn.btn-primary(type="button" data-dismiss="modal") 아니요. 취소하겠습니다.

@@ -1,0 +1,104 @@
+%br
+%br
+%br
+.row
+  .col-sm-8.col-sm-offset-2
+    %form(role="form" method="GET")
+      .form-group
+        .input-group.input-group-lg
+          %input.form-control(type="text" placeholder="저장소 검색..." autofocus="true" autocomplete="false" name="q")
+          .input-group-btn
+            %button.btn.btn-primary(type="submit")
+              %span.glyphicon.glyphicon-search
+
+%br
+%br
+.row
+  .col-sm-8.col-sm-offset-2
+    - if @search_repos.nil?
+    - elsif @search_repos.length == 0
+      %h4.text-center 검색된 저장소가 없습니다.
+    - else
+      %table.table
+        %tbody
+        - @search_repos.each do |repo|
+          %tr
+            %td.vert-center.col-sm-5
+              %h4.truncate
+                %a(href="/orgs/#{repo[:organization_name]}/repos/#{repo[:name]}")
+                  %img.img-circle(src="#{user_img_url(repo[:organization_name], 30)}")
+                  %span= full_repo_name(repo[:organization_name], repo[:name])
+            %td.vert-center.col-sm-5
+              %p.truncate
+                %em.text-muted= repo[:short_description].force_encoding('UTF-8')
+            %td.vert-center.text-right.col-sm-2
+              %span= repo[:download_count]
+              %span.glyphicon.glyphicon-cloud-download
+              %span= repo[:star_count]
+              %span.glyphicon.glyphicon-star
+        %tr
+          %td
+          %td
+          %td
+%br
+%br
+%br
+%br
+%br
+.row
+  .col-sm-6
+    %h4 최근 업데이트된 저장소
+    - if @recently_repos.length == 0
+      %p.text-muted
+        %em 저장소가 없습니다.
+    - else
+      %table.table
+        %tbody
+        - @recently_repos.each do |repo|
+          %tr
+            %td.vert-center.col-sm-1
+              %img.img-circle(src="#{user_img_url(repo.organization[:name], 30)}")
+            %td.vert-center.col-sm-10
+              %h4.truncate
+                %span
+                  %a(href="/orgs/#{repo.organization[:name]}/repos/#{repo[:name]}")
+                    %span= full_repo_name(repo.organization[:name], repo[:name])
+                %br
+                %span
+                  %small
+                    %em.text-muted= repo[:short_description].force_encoding('UTF-8')
+            %td.vert-center.text-right.col-sm-1
+              %span= repo.starred_users.count
+              %span.glyphicon.glyphicon-star
+        %tr
+          %td
+          %td
+          %td
+  .col-sm-6
+    %h4 인기 저장소
+    - if @popular_repos.length == 0
+      %p.text-muted
+        %em 저장소가 없습니다.
+    - else
+      %table.table
+        %tbody
+        - @popular_repos.each do |repo|
+          %tr
+            %td.vert-center.col-sm-1
+              %img.img-circle(src="#{user_img_url(repo.organization[:name], 30)}")
+            %td.vert-center.col-sm-10
+              %h4.truncate
+                %span
+                  %a(href="/orgs/#{repo.organization[:name]}/repos/#{repo[:name]}")
+                    %span= full_repo_name(repo.organization[:name], repo[:name])
+                %br
+                %span
+                  %small
+                    %em.text-muted= repo[:short_description].force_encoding('UTF-8')
+            %td.vert-center.text-right.col-sm-1
+              %span= repo.starred_users.count
+              %span.glyphicon.glyphicon-star
+        %tr
+          %td
+          %td
+          %td

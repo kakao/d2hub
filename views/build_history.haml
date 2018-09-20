@@ -1,0 +1,62 @@
+.row
+  .col-sm-12
+    .table-responsive
+      %table.table
+        %thead
+          %tr
+            %td.col-sm-3
+            %td.col-sm-9
+        %tbody
+          %tr
+            %td 소스 URL
+            %td= @build_history.git_url
+          %tr
+            %td 소스 Branch/Tag
+            %td= @build_history.git_branch_name
+          %tr
+            %td Dockerfile 경로
+            %td= "#{@dockerfile_path}"
+          %tr
+            %td 상태
+            %td
+              - if @build_history.status == 'success'
+                %span.label.label-success 빌드 성공
+              - elsif @build_history.status == 'building'
+                %span.label.label-warning 빌드중
+              - else
+                %span.label.label-danger 빌드 실패
+          %tr
+            %td 에러
+            %td
+              - if @build_history.status == 'error'
+                .alert.alert-danger(role="alert")
+                  %strong= @build_history.error_reason
+          - if has_authority_of_repository? @repo.organization[:name], @repo[:name]
+            %tr
+              %td 다시 빌드 하기
+              %td
+                - unless @build_history.git_type == ''
+                  %form(role="form" method="post" action="/build-histories/#{@build_history.id}/rebuild")
+                    .form-group
+                      %button.btn-warning.btn.btn-xs(type="submit")
+                        %span.glyphicon.glyphicon-play
+                        빌드 시작
+          %tr
+            %td Docker 이미지
+            %td= @build_history.docker_image_name
+          %tr
+            %td 생성일
+            %td= @build_history.created_at
+          %tr
+            %td 최근 수정일
+            %td= @build_history.updated_at
+          %tr
+            %td Dockerfile
+            %td
+              .well
+                %p.textarea-text= @build_history.dockerfile_content.force_encoding('UTF-8')
+          %tr
+            %td 빌드 결과
+            %td
+              .well
+                %p.textarea-text= @build_history.logs.force_encoding('UTF-8')

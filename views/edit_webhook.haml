@@ -1,0 +1,83 @@
+.row
+  .col-sm-9
+    - unless @error.nil?
+      .alert.alert-danger
+        %strong 문제가 발생했습니다.
+        %br
+        - if (not @error.nil?) and @error == 'create_failed'
+          %span.text-danger Webhook URL을 추가하지 못했습니다.
+        - elsif (not @error.nil?) and @error == 'delete_failed'
+          %span.text-danger Webhook URL을 삭제하지 못했습니다.
+.row
+  .col-sm-9
+    %h3 Webhook
+    - if @webhooks.empty?
+      .alert.alert-info(role="alert") 등록된 Webhook URL이 없습니다.
+    - else
+      %table.table
+        %thead
+          %tr
+            %th Webhook URL
+            %th 생성일
+            %th 삭제
+        %tbody
+          - @webhooks.each do |webhook|
+            %tr
+              %td.col-sm-4
+                %a(href="/orgs/#{@repo.organization[:name]}/repos/#{@repo[:name]}/webhooks/#{webhook[:id]}/payloads")
+                  %span= webhook[:url].force_encoding('UTF-8')
+              %td.col-sm-4
+                %span= webhook[:created_at]
+              %td
+                %form(role="form" method="post" action="/orgs/#{@repo.organization[:name]}/repos/#{@repo[:name]}/webhooks/#{webhook[:id]}")
+                  %input(type="hidden" name="_method" value="DELETE")
+                  %button.btn.btn-danger(type="submit") 삭제
+.row
+  .col-sm-9
+    %h3 Webhook URL 추가
+    %form.form-horizontal(role="form" method="post" action="/orgs/#{@repo.organization[:name]}/repos/#{@repo[:name]}/webhooks")
+      .form-group
+        %label.col-sm-2.control-label(for="webhookURL") URL
+        .col-sm-10
+          %input.form-control#webhookURL(type="text" name="webhook_url" placeholder="http://localhost" autofocus="true" autocomplete="false")
+          - if (not @error.nil?) and @error == 'empty_url'
+            %span.text-danger Webhook URL을 입력해 주세요.
+      .form-group
+        %label.col-sm-2.control-label(for="webhookAuth") HTTP AUTH
+        .col-sm-10
+          %input.form-control#webhookAuth(type="text" name="webhook_auth" placeholder="username:password (옵션)" autocomplete="false")
+          - if (not @error.nil?) and @error == 'invalid_auth'
+            %span.text-danger Webhook HTTP auth 형식이 유효하지 않습니다.
+      .form-group
+        .col-sm-offset-2.col-sm-10
+          %button.btn.btn-primary 추가
+          %a.btn.btn-link(href="/orgs/#{@repo.organization[:name]}/repos/#{@repo[:name]}" ) 취소
+%br
+.row
+  .col-sm-9
+    .panel.panel-warning
+      .panel-heading
+        %strong 아래 형식의 JSON이 POST로 요청됩니다.
+      .panel-body
+        .row
+          .col-sm-7
+            .well
+              %strong
+                %p {
+                %p &nbsp; "buildID": "1139",
+                %p &nbsp; "isSuccess": true,
+                %p &nbsp; "errorReason": "",
+                %p &nbsp; "createdAt": "2015-09-16 15:04:44 +0900",
+                %p &nbsp; "imageName": "d2hub.com/d2hub/d2hub",
+                %p &nbsp; "imageTag": "v1.4.2"
+                %p }
+          .col-sm-5
+            %ul.list-group
+              %li.list-group-item buildID - 자동 빌드 아이디
+              %li.list-group-item isSuccess - 빌드 성공/실패 여부
+              %li.list-group-item errorReason - 빌드 실패 원인
+              %li.list-group-item createdAt - 빌드 완료 시간
+              %li.list-group-item imageName - docker 이미지 이름
+              %li.list-group-item imageTag - docker 이미지 태그
+
+

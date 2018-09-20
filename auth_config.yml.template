@@ -1,0 +1,11 @@
+server:
+  addr: ":5001"
+token:
+  issuer: Auth Service
+  certificate: "/ssl/d2hub.com.cert"
+  key: "/ssl/d2hub.com.key"
+  expiration: 900
+d2hub_auth:
+  d2hub_url: http://#LOCAL_IP#:9292
+acl_d2hub:
+  d2hub_url: http://#LOCAL_IP#:9292

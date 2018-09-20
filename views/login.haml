@@ -1,0 +1,19 @@
+.container
+  .row
+    .col-sm-4
+    .col-sm-3
+      .page-header
+        %h1.text-center
+          %p kakao
+          %p Docker Hub
+      %form.form-horizontal(role="form" action="/login" method="post")
+        .form-group
+          %col-sm-6
+            %input.form-control(type="text" name="username" placeholder="카카오 아이디" autofocus)
+        .form-group
+          %col-sm-6
+            %input.form-control(type="password" name="password" placeholder="비밀번호")
+        .form-group
+          %col-sm-6
+            %button.btn.btn-primary.btn-block(type="submit") 로그인
+    .col-sm-4

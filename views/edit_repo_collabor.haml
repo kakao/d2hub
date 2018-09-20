@@ -1,0 +1,42 @@
+.row
+  .col-sm-8
+    - unless @error.nil?
+      .alert.alert-danger
+        %strong 문제가 발생했습니다.
+.row
+  .col-sm-8
+    %h3 공동 작업자
+    %table.table
+      %thead
+        %tr
+          %th 사용자명
+          %th 접근 권한
+          %th 수정
+      %tbody
+        - @collaborators.each do |user|
+          %tr
+            %td.col-sm-4
+              %a(href="/users/#{user[:name]}" )
+                %img.img-circle(src="#{user_img_url(user[:name], 20)}")
+                %span= user[:name]
+            %td.col-sm-4
+              = user[:role]
+            %td.col-sm-4
+              - if user[:name] != user_id
+                - if user[:role] == 'collaborator'
+                  %form(role="form" method="post" action="/orgs/#{@repo.organization[:name]}/repos/#{@repo[:name]}/collaborators/#{user[:name]}")
+                    %input(type="hidden" name="_method" value="DELETE")
+                    %button.btn.btn-danger(type="submit") 삭제
+.row
+  .col-sm-4
+    %h3 공동 작업자 추가
+    %form(role="form" method="post" action="/orgs/#{@repo.organization[:name]}/repos/#{@repo[:name]}/collaborators")
+      .form-group
+        %input.form-control(type="text" name="user_name" placeholder="사용자명" autofocus="true" autocomplete="false")
+        - if (not @error.nil?) and @error == 'not_exists'
+          %span.text-danger 해당 사용자가 존재하지 않습니다.
+        - elsif (not @error.nil?) and @error == 'already_exists'
+          %span.text-danger 동일한 사용자가 이미 존재합니다.
+      .form-group
+        %button.btn.btn-primary 공동 작업자 추가
+        %a.btn.btn-link(href="/orgs/#{@repo.organization[:name]}/repos/#{@repo[:name]}" ) 취소

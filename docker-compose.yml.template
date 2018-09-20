@@ -1,0 +1,58 @@
+version: '2'
+services:
+  auth_server:
+    image: d2hub.com/docker_auth:latest
+    command: --v=2 --alsologtostderr /config/auth_config.yml
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./auth_config.yml:/config/auth_config.yml
+
+  data_registry:
+    image: d2hub.com/registry:latest
+    entrypoint: "/bin/true"
+    command: ""
+    volumes:
+      - ./.registry:/var/lib/registry
+    environment:
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
+
+  index_registry:
+    image: d2hub.com/d2hub-registryv2:latest
+    ports:
+      - "5002:5001"
+    volumes_from:
+      - data_registry
+    environment:
+      D2HUB_URL: http://#LOCAL_IP#:9292
+      REGISTRY_AUTH: token
+      REGISTRY_AUTH_TOKEN_REALM: http://#LOCAL_IP#:5001/auth
+      REGISTRY_AUTH_TOKEN_SERVICE: registry.docker.kakao.io
+      REGISTRY_AUTH_TOKEN_ISSUER: "Auth Service"
+      REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE: /ssl/d2hub.com.cert
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
+    depends_on:
+      - auth_server
+
+  api_registry:
+    image: d2hub.com/registry:latest
+    ports:
+      - "7000:5000"
+    volumes_from:
+      - data_registry
+    environment:
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
+
+  builder:
+    image: d2hub.com/docker-builder:latest
+    ports:
+      - "3001:3000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      SERVER_PORT: 3000
+      DOCKER_REGISTRY_ADDR: #LOCAL_IP#:5002
+    depends_on:
+      - index_registry

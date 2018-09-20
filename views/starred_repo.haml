@@ -1,0 +1,37 @@
+.row
+  .col-sm-9
+    %h3 북마크 저장소
+  .col-sm-3
+    != yield
+%br
+.row
+  .col-sm-12
+    - if @repos.length == 0
+      %p.text-muted
+        %em 저장소가 없습니다.
+    - else
+      .row
+        - @repos.each do |repo|
+          .col-sm-12
+            %a.text-black(href="/orgs/#{repo.organization[:name]}/repos/#{repo[:name]}")
+              .panel.panel-default.repo-panel
+                .panel-body
+                  .row
+                    .col-sm-7
+                      %h4.text-primary.truncate
+                        %img.img-circle(src="#{user_img_url(repo.organization[:name], 30)}")
+                        %strong= full_repo_name(repo.organization[:name], repo[:name])
+                      - if repo[:short_description] != ''
+                        %p.truncate
+                          %em.text-muted= repo[:short_description].force_encoding('UTF-8')
+                    .col-sm-2.text-center
+                      %span
+                        %em.text-muted= age_ko(repo[:updated_at] || repo[:created_at])
+                    .col-sm-3.text-center
+                      %span
+                        %img.vert-center(src="/img/repository-star-icon.svg")
+                      %span= repo.starred_users.count
+                      %span &nbsp;
+                      %span
+                        %img.vert-center(src="/img/repository-cloud-icon.svg")
+                      %span= repo[:download_count]

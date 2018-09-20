@@ -1,0 +1,14 @@
+{
+  "name": "clipboard.js",
+  "homepage": "https://github.com/lgarron/clipboard.js",
+  "version": "2.4.6",
+  "_release": "2.4.6",
+  "_resolution": {
+    "type": "version",
+    "tag": "v2.4.6",
+    "commit": "21ddf5a95494309563127cc506236eb7e11e7453"
+  },
+  "_source": "https://github.com/lgarron/clipboard.js.git",
+  "_target": "^2.4.6",
+  "_originalSource": "clipboard.js"
+}

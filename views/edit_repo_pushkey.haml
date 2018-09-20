@@ -1,0 +1,49 @@
+.row
+  .col-sm-8
+    - if @repo[:push_key_id].nil?
+      %h3 Push Key 등록
+      %form.form-horizontal(role="form" method="post" action="/orgs/#{@repo.organization[:name]}/repos/#{@repo[:name]}/pushkeys")
+        .form-group
+          %label.col-sm-2.control-label(for="push_key_id") 아이디
+          .col-sm-6
+            %input.form-control#push_key_id(type="text" name="push_key_id")
+        .form-group
+          %label.col-sm-2.control-label(for="push_key_password") 비밀번호
+          .col-sm-6
+            %input.form-control#push_key_password(type="password" name="push_key_password")
+        .form-group
+          .col-sm-offset-2.col-sm-10
+            %button.btn.btn-primary(type="submit") Push Key 등록
+    - else
+      .panel.panel-info
+        .panel-heading
+          %h3.panel-title
+            Push Key 정보
+        .panel-body
+          %dl.dl-horizontal
+            %dt 아이디
+            %dd= @repo[:push_key_id]
+            %dt 비밀번호
+            %dd= @repo[:push_key_password]
+      %button.btn.btn-danger(type="button" data-toggle="modal" data-target="#changePushKeyModal") Push Key 변경하기
+.modal.fade#changePushKeyModal
+  .modal-dialog
+    .modal-content
+      %form.form-horizontal(role="form" method="post" action="/orgs/#{@repo.organization[:name]}/repos/#{@repo[:name]}/pushkeys")
+        .modal-header
+          %button.close(type="button" data-dismiss="modal")
+            %span(aria-hidden="true") &times;
+            %span.sr-only 닫기
+          %h4.modal-title Push Key 변경하기
+        .modal-body
+          .form-group
+            %label.col-sm-2.control-label(for="push_key_id") 아이디
+            .col-sm-6
+              %input.form-control#push_key_id(type="text" name="push_key_id" value="#{@repo[:push_key_id]}")
+          .form-group
+            %label.col-sm-2.control-label(for="push_key_password") 비밀번호
+            .col-sm-6
+              %input.form-control#push_key_password(type="password" name="push_key_password" value="#{@repo[:push_key_password]}")
+        .modal-footer
+          %button.btn.btn-danger(type="submit") Push Key 변경
+          %button.btn.btn-primary(type="button" data-dismiss="modal") 취소

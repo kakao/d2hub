@@ -1,0 +1,116 @@
+.row
+  .col-sm-12
+    .panel.panel-default
+      .panel-heading 저장소 추가
+      .panel-body
+        .row
+          .col-sm-offset-1.col-sm-10
+            - unless @error.nil?
+              .alert.alert-danger
+                %strong 문제가 발생했습니다.
+          .col-sm-offset-1.col-sm-10
+            %form(role="form" method="post" action="/repos" onsubmit="saveRepo()" )
+              %input(type="hidden" name="github_host" value="#{@github_host}")
+              %input(type="hidden" name="github_repo_id" value="#{@github_repo_id}")
+              .form-group.form-inline
+                %label
+                  %span 저장소명:
+                  %span.text-danger (필수)
+                %br
+                %select.form-control(name="org_name")
+                  - @orgs.each do |org|
+                    - if org[:name] == @org_name
+                      %option(selected="true" )= org[:name]
+                    - else
+                      %option= org[:name]
+                %span &nbsp;
+                %input.form-control(type="text" name="repo_name" value="#{@repo_name}" placeholder="저장소명" style="width: 235px" autofocus="true" required="true" pattern="^[\.a-z0-9_-]+$" minlength="3" maxlength="30")
+                - if (not @error.nil?) and @error == 'creating_repo_failed'
+                  %span.text-danger 저장소 생성에 실패했습니다. 관리자에게 문의하세요.
+                - if (not @error.nil?) and @error == 'already_exists'
+                  %span.text-danger 동일한 저장소가 이미 존재합니다.
+                - if (not @error.nil?) and @error == 'dismiss_required_fields'
+                  %span.text-danger 이 필드는 반드시 입력해야 합니다.
+                - if (not @error.nil?) and @error == 'invalid_repo_name'
+                  %span.text-danger 새로운 저장소명; 3 - 30자 제한. 소영문자, 숫자, '_-, '-' 문자만 허용됩니다.
+                %p.help-block 새로운 저장소명; 3 - 30자 제한. 소영문자, 숫자, '_-, '-' 문자만 허용됩니다.
+              %br
+              .form-group
+                %input#buildTagsFormValue(type="hidden" name="build_tags")
+                %label 태그
+                %span.text-info.small &nbsp;(Git 브랜치명에 Ruby 정규표현식을 사용할 수 있습니다.
+                %span
+                  %a.text-danger(href="http://rubular.com/" target="_blank") 여기
+                %span.text-info.small 에서 정규표현식을 테스트 할 수 있습니다.)
+                %br
+                .table-responsive#buildTags
+                  %table.table.table-striped.table-hover
+                    %thead
+                      %tr
+                        %th.col-sm-2 Git 타입
+                        %th.col-sm-2 Git 브랜치명
+                        %th.col-sm-2 Dockerfile 위치
+                        %th.col-sm-2 Dockerfile 파일명
+                        %th.col-sm-2 Docker 태그명
+                        %th.col-sm-2
+                    %tbody(v-repeat="tags")
+                      %tr
+                        %td
+                          %select.form-control(v-model="git_type")
+                            %option Branch
+                            %option Tag
+                        %td
+                          %input.form-control(type="text" v-model="git_branch_name")
+                          %span.checkbox
+                            %label
+                              %input(type="checkbox" v-model="use_regex")
+                              %span 정규표현식 사용
+                        %td
+                          %input.form-control(type="text" v-model="dockerfile_location")
+                        %td
+                          %input.form-control(type="text" v-model="dockerfile_name")
+                        %td
+                          %input.form-control(v-show="!use_regex" type="text" v-model="docker_tag_name")
+                          %p.help-block(v-show="use_regex") Git 브랜치명과 동일한 태그명이 만들어집니다
+                        %td(v-if="$index == 0")
+                          %button.btn.btn-primary(type="button" v-on="click: addDockerTag")
+                            %span.glyphicon.glyphicon-plus(aria-hidden="true")
+                            추가
+                        %td(v-if="$index != 0")
+                          %button.btn.btn-danger(type="button" v-on="click: removeDockerTag($index)")
+                            %span.glyphicon.glyphicon-minus(aria-hidden="true")
+                            제거
+              %br
+              .form-group
+                %label(for="access_type") 저장소 타입
+                .radio
+                  %label
+                    %input#public-repo_type(type="radio" name="access_type" value="public" checked="true") 공개
+                    %span.text-success (누구나 이 저장소를 pull하고 검색할 수 있도록 공개됩니다.)
+                .radio
+                  %label
+                    %input#private-repo_type(type="radio" name="access_type" value="private") 비공개
+                    %span.text-warning (당신과 이 저장소의 공동작업자만이 pull할 수 있습니다.)
+              %br
+              - if D2HUB::use_watchcenter == 'true'
+                .form-group
+                  .row
+                    .col-sm-6
+                      %label(for="watchCenterID") WatchCenter 알람등록
+                      %span.text-info.small (빌드 시작과 완료시 알람이 갑니다.)
+                      %input.form-control#watchCenterID(type="text" name="watch_center_id" placeholder="WatchCenter 2.0 아이디(숫자)를 입력하세요. (옵션)")
+              %br
+              .form-group
+                %label 자동 빌드 활성화
+                .radio
+                  %label
+                    %input#enable_build(type="radio" name="active_build" value="on" checked="true") ON
+                    %span.text-success (Push할 때마다 Docker 이미지를 빌드합니다.)
+                .radio
+                  %label
+                    %input#disable_build(type="radio" name="active_build" value="off") OFF
+                    %span.text-warning (자동 빌드가 수행되지 않습니다.)
+              %br
+              .form-group
+                %button.btn.btn-primary(type="submit") 저장소 추가
+                %a.btn.btn-link(href="/") 취소

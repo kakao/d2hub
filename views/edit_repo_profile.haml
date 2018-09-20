@@ -1,0 +1,17 @@
+.row
+  .col-sm-8
+    %form(role="form" method="post" action="/orgs/#{@repo.organization[:name]}/repos/#{@repo[:name]}")
+      %input(type="hidden" name="_method" value="PUT")
+      .form-group
+        %label 요약 설명
+        %span.label.label-warning 200자 제한
+        %textarea.form-control(rows="3" maxlength="400" name="short_description")= @repo[:short_description].force_encoding('UTF-8')
+      .form-group
+        %label 전체 설명
+        %span.label.label-info
+          %a.text-link.text-white(href="http://daringfireball.net/projects/markdown/syntax") markdown syntax
+          %span 를 지원합니다.
+        %textarea.form-control(rows="10" name="description")= @repo[:description].force_encoding('UTF-8')
+      .form-group
+        %button.btn.btn-primary(type="submit") 저장
+        %a.btn.btn-link(href="/orgs/#{@repo.organization[:name]}/repos/#{@repo[:name]}") 취소

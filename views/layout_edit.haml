@@ -1,0 +1,11 @@
+.row
+  .col-sm-3
+    .list-group
+      %li.list-group-item.list-group-item-success.menu-text
+        %img.img-circle(src="#{user_img_url(@org_name, 20)}")
+        %span= @org_name
+      - unless primary_organization? @org_name
+        %a.list-group-item#item-edit-member(href="/orgs/#{@org_name}/edit/member" ) 멤버 수정
+      %a.list-group-item#item-edit-profile(href="/orgs/#{@org_name}/edit/profile" ) 프로필 수정
+  .col-sm-9
+    != yield

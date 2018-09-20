@@ -1,0 +1,27 @@
+.row
+  .col-sm-12
+    %h3 전체 저장소 (최근 업데이트순)
+.row
+  .col-sm-12
+    .alert.alert-info
+      %span 모두
+      %span.badge.badge-success= @repos.length
+      %span 개가 등록됨
+.row
+  .col-sm-12
+    .table-responsive
+      %table.table.table-striped
+        %thead
+          %tr
+            %th.col-sm-4 저장소
+            %th.col-sm-6 설명
+            %th.col-sm-3 최근 업데이트
+        %tbody
+        - @repos.each do |repo|
+          %tr
+            %td
+              %a(href="/orgs/#{repo.organization[:name]}/repos/#{repo[:name]}")= full_repo_name(repo.organization[:name], repo[:name])
+            %td
+              %p.truncate
+                %em.text-muted= repo[:short_description].force_encoding('UTF-8')
+            %td= age_ko(repo[:updated_at])

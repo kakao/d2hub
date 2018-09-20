@@ -1,0 +1,28 @@
+!!!
+%html
+  %head
+    %meta(charset="utf-8")
+    %title= @title || 'D2Hub'
+
+    %meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no")
+    %link(rel="stylesheet" href="/bower_components/bootstrap/dist/css/bootstrap.min.css")
+    %link(rel="stylesheet" href="/bower_components/bootstrap/dist/css/bootstrap-theme.min.css")
+    %link(rel="stylesheet" href="//d2hub.com/gnav.css")
+    %link(rel="stylesheet" href="/css/app.css")
+    %script(src="/bower_components/jquery/dist/jquery.min.js")
+    %script(src="/bower_components/bootstrap/dist/js/bootstrap.min.js")
+    %script(src="/bower_components/vue/dist/vue.min.js")
+    %script(src="/bower_components/clipboard/dist/clipboard.min.js")
+    %script(src="/js/app.js")
+  %body
+    != haml :navbar
+    .container
+      .row
+        .col-sm-12
+          != yield
+          %footer
+            %address.text-center
+              %hr
+              %ul.list-inline
+                %li
+                  %a(href="#{settings.helpurl}" target="_blank")= settings.helptext
